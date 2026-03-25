@@ -186,6 +186,4 @@ npm run dev
 │       │   └── ProgressPanel.tsx    # 开户进度面板
 │       └── hooks/
 │           └── useGateway.ts        # 网关连接 Hook
-└── ref/                             # 参考代码（不纳入版本控制）
-    └── openclaw/                    # OpenClaw 源码
 ```
