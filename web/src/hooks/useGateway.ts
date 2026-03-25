@@ -12,6 +12,7 @@ export function useGateway() {
   const [toolEvents, setToolEvents] = useState<ToolEvent[]>([]);
   const [progress, setProgress] = useState<ProgressState | null>(null);
   const [loading, setLoading] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
 
   useEffect(() => {
     const client = new GatewayClient(WS_URL);
@@ -55,6 +56,23 @@ export function useGateway() {
     };
   }, []);
 
+  const loadHistory = useCallback(async (client: GatewayClient, sid: string) => {
+    try {
+      const [historyRes, statusRes] = await Promise.all([
+        client.request("chat.history", { session_id: sid }),
+        client.request("session.status", { session_id: sid }),
+      ]);
+      const msgs = (historyRes.messages ?? []) as ChatMessage[];
+      if (msgs.length > 0) {
+        setMessages(msgs);
+      }
+      if (statusRes.progress) {
+        setProgress(statusRes.progress as ProgressState);
+      }
+    } catch { /* first load, ignore */ }
+    setHistoryLoaded(true);
+  }, []);
+
   const initialize = useCallback(async () => {
     const client = clientRef.current;
     if (!client) return;
@@ -62,8 +80,13 @@ export function useGateway() {
       const res = await client.request("connect", {});
       const sid = res.session_id as string;
       setSessionId(sid);
+      if (res.has_history) {
+        await loadHistory(client, sid);
+      } else {
+        setHistoryLoaded(true);
+      }
     } catch { /* retry on next connect */ }
-  }, []);
+  }, [loadHistory]);
 
   useEffect(() => {
     if (connected && !sessionId) {
@@ -97,10 +120,10 @@ export function useGateway() {
   }, [sessionId]);
 
   useEffect(() => {
-    if (!loading && sessionId) {
+    if (!loading && sessionId && historyLoaded) {
       refreshProgress();
     }
-  }, [loading, sessionId, refreshProgress]);
+  }, [loading, sessionId, historyLoaded, refreshProgress]);
 
   return { connected, sessionId, messages, toolEvents, progress, loading, sendMessage };
 }

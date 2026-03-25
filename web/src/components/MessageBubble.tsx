@@ -15,7 +15,9 @@ export const MessageBubble: React.FC<Props> = ({ message }) => {
       </div>
       <div className={`msg-bubble ${isUser ? "msg-bubble--user" : "msg-bubble--assistant"}`}>
         {isUser ? (
-          <p>{message.content}</p>
+          message.content.split("\n").map((line, i) => (
+            <p key={i}>{line}</p>
+          ))
         ) : (
           <ReactMarkdown>{message.content}</ReactMarkdown>
         )}

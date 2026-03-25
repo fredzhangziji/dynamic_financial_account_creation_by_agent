@@ -71,7 +71,7 @@
 | 工具接口 | `AgentTool { name, description, parameters, execute }` | `BaseTool` 抽象类（Pydantic Schema） |
 | 工具注册 | `createOpenClawTools` + `tool-catalog.ts` | `ToolRegistry` + 各业务工具 |
 | 事件推送 | `emitAgentEvent` 事件总线 | WebSocket `event` 帧异步推送 |
-| 会话管理 | `SessionManager` + freshness 策略 | `SessionManager` 内存存储 |
+| 会话管理 | `SessionManager` + freshness 策略 | `SessionManager` JSON 文件持久化 |
 | 异步派发 | `dispatchAgentRunFromGateway` fire-and-forget | `asyncio.create_task` 异步执行 |
 | 前端客户端 | `GatewayBrowserClient` (Lit) | `GatewayClient` (React) |
 | 工具卡片 | `tool-cards.ts` 可折叠状态卡片 | `ToolCard.tsx` 状态卡片 |
@@ -145,6 +145,26 @@ npm run dev
 
 打开浏览器访问 `http://localhost:5173`，即可开始对话式开户。
 
+## 数据持久化
+
+系统会将会话记录、客户信息和账户数据持久化到本地 JSON 文件：
+
+```
+server/data/sessions.json
+```
+
+- 后端首次运行时自动创建 `data/` 目录和文件
+- 每次对话完成后自动保存，重启后端或刷新页面后历史记录和开户进度会自动恢复
+- 当前为单用户模式，每次连接自动加载最近一次会话
+
+**清空所有数据**（重新开始）：
+
+```bash
+rm -rf server/data
+```
+
+删除后重启后端即可以全新状态开始。
+
 ## 目录结构
 
 ```
@@ -156,7 +176,7 @@ npm run dev
 │   ├── gateway/
 │   │   ├── server.py                # FastAPI + WebSocket 端点
 │   │   ├── protocol.py              # req/res/event 帧协议
-│   │   ├── session.py               # 会话管理 + 开户进度
+│   │   ├── session.py               # 会话管理 + 开户进度 + JSON 持久化
 │   │   └── handlers.py              # 方法分发表
 │   ├── agent/
 │   │   ├── runtime.py               # ReAct 循环（LLM + Tool loop）
@@ -168,6 +188,8 @@ npm run dev
 │   │       ├── risk_assessment.py   # 风险评估（评分矩阵）
 │   │       ├── compliance.py        # 合规检查（模拟）
 │   │       └── account.py           # 账户创建 + 进度查询
+│   ├── data/
+│   │   └── sessions.json           # 持久化数据（自动生成，已 gitignore）
 │   └── models/
 │       ├── customer.py              # 客户数据模型
 │       └── account.py               # 账户数据模型

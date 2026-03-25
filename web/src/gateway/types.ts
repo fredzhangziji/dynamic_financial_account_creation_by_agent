@@ -37,6 +37,12 @@ export interface ToolEvent {
   arguments?: string;
 }
 
+export interface AccountInfo {
+  account_number: string;
+  type: string;
+  label: string;
+}
+
 export interface ProgressState {
   customer_info: Record<string, string>;
   identity_verified: boolean;
@@ -44,7 +50,8 @@ export interface ProgressState {
   risk_level: string | null;
   compliance_checked: boolean;
   account_created: boolean;
-  account_number: string | null;
+  accounts: AccountInfo[];
+  available_types: { type: string; label: string }[];
   can_create_account: boolean;
   missing_requirements: string[];
 }

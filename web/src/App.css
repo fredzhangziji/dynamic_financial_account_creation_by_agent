@@ -309,6 +309,7 @@ body {
 /* ── Input Bar ───────────────────────────────────────────────────────────── */
 .input-bar {
   display: flex;
+  align-items: flex-end;
   gap: 10px;
   padding: 16px 24px;
   border-top: 1px solid var(--color-border);
@@ -323,9 +324,10 @@ body {
   padding: 10px 14px;
   font-size: 15px;
   font-family: inherit;
-  line-height: 1.5;
+  line-height: 22px;
   outline: none;
   transition: border-color 0.15s;
+  overflow-y: auto;
 }
 
 .input-bar__textarea:focus {
@@ -447,6 +449,17 @@ body {
 
 .progress-detail--success .progress-detail__value {
   color: var(--color-success);
+}
+
+.progress-accounts {
+  margin-bottom: 12px;
+}
+
+.progress-accounts__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-success);
+  margin-bottom: 6px;
 }
 
 .progress-missing {

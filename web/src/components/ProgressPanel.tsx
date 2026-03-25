@@ -40,10 +40,15 @@ export const ProgressPanel: React.FC<Props> = ({ progress }) => {
         </div>
       )}
 
-      {progress?.account_number && (
-        <div className="progress-detail progress-detail--success">
-          <span className="progress-detail__label">账号</span>
-          <span className="progress-detail__value">{progress.account_number}</span>
+      {progress?.accounts && progress.accounts.length > 0 && (
+        <div className="progress-accounts">
+          <p className="progress-accounts__title">已开通账户</p>
+          {progress.accounts.map((a) => (
+            <div key={a.account_number} className="progress-detail progress-detail--success">
+              <span className="progress-detail__label">{a.label}</span>
+              <span className="progress-detail__value">{a.account_number}</span>
+            </div>
+          ))}
         </div>
       )}
 

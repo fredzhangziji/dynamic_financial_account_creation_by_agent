@@ -45,8 +45,12 @@ class RequestContext:
 # ── Handlers ─────────────────────────────────────────────────────────────────
 
 async def handle_connect(params: dict[str, Any], ctx: RequestContext) -> dict:
-    session = ctx.sessions.get_or_create(params.get("session_id"))
-    return ok_response(ctx.req_id, {"session_id": session.session_id})
+    session = ctx.sessions.get_default()
+    has_history = len(session.messages) > 0
+    return ok_response(ctx.req_id, {
+        "session_id": session.session_id,
+        "has_history": has_history,
+    })
 
 
 async def handle_chat_send(params: dict[str, Any], ctx: RequestContext) -> dict:
@@ -58,7 +62,6 @@ async def handle_chat_send(params: dict[str, Any], ctx: RequestContext) -> dict:
     session = ctx.sessions.get_or_create(session_id)
     session.add_message("user", message)
 
-    # Acknowledge immediately, then stream events asynchronously.
     await ctx.send(ok_response(ctx.req_id, {"status": "started", "session_id": session.session_id}))
 
     async def _run() -> None:
@@ -69,9 +72,11 @@ async def handle_chat_send(params: dict[str, Any], ctx: RequestContext) -> dict:
         except Exception:
             logger.exception("agent run failed")
             await ctx.send(event_frame("error", {"message": "Agent 运行出错，请重试"}, session.next_seq()))
+        finally:
+            ctx.sessions.save()
 
     asyncio.create_task(_run())
-    return None  # already responded
+    return None
 
 
 async def handle_chat_history(params: dict[str, Any], ctx: RequestContext) -> dict:

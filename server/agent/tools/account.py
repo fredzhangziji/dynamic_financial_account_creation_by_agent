@@ -8,7 +8,7 @@ from typing import Any, Optional
 from pydantic import BaseModel
 
 from agent.tools.registry import BaseTool, ToolResult
-from gateway.session import SessionManager
+from gateway.session import SessionManager, AccountEntry, ACCOUNT_TYPE_LABELS
 
 
 class CreateAccountParams(BaseModel):
@@ -20,6 +20,7 @@ class CreateAccountTool(BaseTool):
     description = (
         "为客户创建证券账户。可选的 account_type: stock(普通股票账户)、"
         "fund(基金账户)、margin(融资融券账户)。"
+        "同一客户可以开通不同类型的账户，但同一类型只能开一个。"
         "前置条件：必填信息已齐全、身份核验通过、风险评估完成、合规检查通过。"
     )
     parameters = CreateAccountParams
@@ -35,7 +36,7 @@ class CreateAccountTool(BaseTool):
             return ToolResult(success=False, message="会话不存在")
 
         state = session.state
-        if not state.can_create_account:
+        if not state.prerequisites_met:
             missing = state.to_progress()["missing_requirements"]
             return ToolResult(
                 success=False,
@@ -43,33 +44,47 @@ class CreateAccountTool(BaseTool):
                 data={"missing": missing},
             )
 
-        if state.account_created:
+        account_type = kwargs.get("account_type", "stock")
+        type_label = ACCOUNT_TYPE_LABELS.get(account_type, account_type)
+
+        if state.has_account(account_type):
+            existing = next(a for a in state.accounts if a.account_type == account_type)
             return ToolResult(
-                success=True,
-                message=f"账户已存在，账号: {state.account_number}",
-                data={"account_number": state.account_number},
+                success=False,
+                message=f"该客户已拥有{type_label}，账号: {existing.account_number}",
+                data={
+                    "account_number": existing.account_number,
+                    "available_types": [
+                        {"type": t, "label": ACCOUNT_TYPE_LABELS[t]}
+                        for t in state.available_types
+                    ],
+                },
             )
 
         CreateAccountTool._counter += 1
         date_str = time.strftime("%Y%m%d")
         account_number = f"HT-{date_str}-{CreateAccountTool._counter:04d}"
 
-        account_type = kwargs.get("account_type", "stock")
-        type_labels = {"stock": "普通股票账户", "fund": "基金账户", "margin": "融资融券账户"}
-        type_label = type_labels.get(account_type, "普通股票账户")
+        state.accounts.append(AccountEntry(account_number=account_number, account_type=account_type))
 
-        state.account_created = True
-        state.account_number = account_number
-        state.account_type = account_type
+        available = state.available_types
+        msg = f"开户成功！账户类型: {type_label}，账号: {account_number}"
+        if available:
+            labels = [ACCOUNT_TYPE_LABELS[t] for t in available]
+            msg += f"。还可以开通: {', '.join(labels)}"
 
         return ToolResult(
             success=True,
-            message=f"开户成功！账户类型: {type_label}，账号: {account_number}",
+            message=msg,
             data={
                 "account_number": account_number,
                 "account_type": account_type,
                 "account_type_label": type_label,
                 "customer_name": state.customer_info.get("name", ""),
+                "total_accounts": len(state.accounts),
+                "available_types": [
+                    {"type": t, "label": ACCOUNT_TYPE_LABELS[t]} for t in available
+                ],
             },
         )
 
