@@ -2,6 +2,9 @@
 
 基于 **"网关 + Agent"** 架构的 AI 驱动金融开户系统。参考 [OpenClaw](https://github.com/anthropics/openclaw) 的核心设计思想，采用 ReAct 范式实现无固定流程的对话式开户体验。
 
+## 演示视频
+<video src="https://www.loom.com/share/769c00385f844a1e84f82003e0571e1f" controls="controls" width="100%" height="auto"></video>
+
 ## 业务背景
 
 传统证券开户系统采用**固定步骤的向导式流程**——用户必须按照"填写信息 → 上传证件 → 风险评估 → 签署协议 → 开户"的顺序逐步操作，无法跳过或调整顺序。
