@@ -3,7 +3,12 @@
 基于 **"网关 + Agent"** 架构的 AI 驱动金融开户系统。参考 [OpenClaw](https://github.com/anthropics/openclaw) 的核心设计思想，采用 ReAct 范式实现无固定流程的对话式开户体验。
 
 ## 演示视频
-<video src="https://www.loom.com/share/769c00385f844a1e84f82003e0571e1f" controls="controls" width="100%" height="auto"></video>
+
+温馨提示：可二倍速观看
+
+https://github.com/user-attachments/assets/4edf03de-425c-4a17-96a5-0a35f3975cbd
+
+
 
 ## 业务背景
 
